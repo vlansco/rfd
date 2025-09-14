@@ -52,7 +52,7 @@ impl<'a> WasmDialog<'a> {
 
         let title = match opt {
             FileKind::In(dialog) => &dialog.title,
-            FileKind::Out(dialog, _) => &dialog.title,
+            FileKind::Out(dialog, _) => &dialog.file_name,
         }
         .as_ref()
         .map(|title| {
@@ -111,7 +111,7 @@ impl<'a> WasmDialog<'a> {
                 let output: HtmlAnchorElement = wasm_bindgen::JsCast::dyn_into(output_el).unwrap();
 
                 output.set_id("rfd-output");
-                output.set_inner_text("Download the file");
+                output.set_inner_text("Download");
                 card.append_child(&output).unwrap();
 
                 // only add the cancel button for file download.
