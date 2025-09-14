@@ -65,6 +65,19 @@ impl<'a> WasmDialog<'a> {
             title_el
         });
 
+        // pre-create the OK and CANCEL buttons
+        // so we can set the inner text and onclick handlers later and then add them to the canvas
+        let pre_create_button = || -> HtmlButtonElement {
+            let btn_el = document.create_element("button").unwrap();
+            let btn: HtmlButtonElement = wasm_bindgen::JsCast::dyn_into(btn_el).unwrap();
+            btn.set_class_name("rfd-button");
+            btn
+        };
+
+        let ok_button = pre_create_button();
+        let cancel_button = pre_create_button();
+
+        // create the input or output elements
         let io = match opt {
             FileKind::In(dialog) => {
                 let input_el = document.create_element("input").unwrap();
@@ -82,8 +95,15 @@ impl<'a> WasmDialog<'a> {
                 accept.iter_mut().for_each(|ext| ext.insert_str(0, "."));
 
                 input.set_accept(&accept.join(","));
-
                 card.append_child(&input).unwrap();
+
+                // add ok and cancel buttons to the card
+                ok_button.set_inner_text("Open");
+                card.append_child(&ok_button).unwrap();
+
+                cancel_button.set_inner_text("Cancel");
+                card.append_child(&cancel_button).unwrap();
+
                 HtmlIoElement::Input(input)
             }
             FileKind::Out(dialog, data) => {
@@ -91,37 +111,19 @@ impl<'a> WasmDialog<'a> {
                 let output: HtmlAnchorElement = wasm_bindgen::JsCast::dyn_into(output_el).unwrap();
 
                 output.set_id("rfd-output");
-                output.set_inner_text("click here to download your file");
-
+                output.set_inner_text("Download the file");
                 card.append_child(&output).unwrap();
+
+                // only add the cancel button for file download.
+                cancel_button.set_inner_text("Cancel");
+                card.append_child(&cancel_button).unwrap();
+
                 HtmlIoElement::Output {
                     element: output,
                     name: dialog.file_name.clone().unwrap_or_default(),
                     data,
                 }
             }
-        };
-
-        let ok_button = {
-            let btn_el = document.create_element("button").unwrap();
-            let btn: HtmlButtonElement = wasm_bindgen::JsCast::dyn_into(btn_el).unwrap();
-
-            btn.set_class_name("rfd-button");
-            btn.set_inner_text("Ok");
-
-            card.append_child(&btn).unwrap();
-            btn
-        };
-
-        let cancel_button = {
-            let btn_el = document.create_element("button").unwrap();
-            let btn: HtmlButtonElement = wasm_bindgen::JsCast::dyn_into(btn_el).unwrap();
-
-            btn.set_class_name("rfd-button");
-            btn.set_inner_text("Cancel");
-
-            card.append_child(&btn).unwrap();
-            btn
         };
 
         let style = document.create_element("style").unwrap();
@@ -135,7 +137,6 @@ impl<'a> WasmDialog<'a> {
             ok_button,
             cancel_button,
             io,
-
             style,
         }
     }
