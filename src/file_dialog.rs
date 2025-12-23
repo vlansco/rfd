@@ -57,7 +57,7 @@ impl FileDialog {
     }
 
     /// Set starting directory of the dialog. Supported platforms:
-    ///   * Linux ([GTK only](https://github.com/PolyMeilex/rfd/issues/42))
+    ///   * Linux
     ///   * Windows
     ///   * Mac
     pub fn set_directory<P: AsRef<Path>>(mut self, path: P) -> Self {
@@ -93,14 +93,17 @@ impl FileDialog {
     ///  * Windows
     ///  * Mac
     ///  * Linux (XDG only)
-    pub fn set_parent<W: HasWindowHandle + HasDisplayHandle>(mut self, parent: &W) -> Self {
+    pub fn set_parent<W: HasWindowHandle + HasDisplayHandle + ?Sized>(
+        mut self,
+        parent: &W,
+    ) -> Self {
         self.parent = parent.window_handle().ok().map(|x| x.as_raw());
         self.parent_display = parent.display_handle().ok().map(|x| x.as_raw());
         self
     }
 
     /// Set can create directories in the dialog.
-    /// Suported in: `macos`.
+    /// Supported in: `macos`.
     pub fn set_can_create_directories(mut self, can: bool) -> Self {
         self.can_create_directories.replace(can);
         self
@@ -109,6 +112,9 @@ impl FileDialog {
 
 #[cfg(not(target_arch = "wasm32"))]
 use crate::backend::{FilePickerDialogImpl, FileSaveDialogImpl, FolderPickerDialogImpl};
+
+#[cfg(target_os = "macos")]
+use crate::backend::FileOrFolderPickerDialogImpl;
 
 #[cfg(not(target_arch = "wasm32"))]
 impl FileDialog {
@@ -130,6 +136,22 @@ impl FileDialog {
     /// Pick multiple folders
     pub fn pick_folders(self) -> Option<Vec<PathBuf>> {
         FolderPickerDialogImpl::pick_folders(self)
+    }
+
+    #[cfg(target_os = "macos")]
+    /// Pick one file or folder
+    ///
+    /// Supported only on: macos
+    pub fn pick_file_or_folder(self) -> Option<PathBuf> {
+        FileOrFolderPickerDialogImpl::pick_file_or_folder(self)
+    }
+
+    #[cfg(target_os = "macos")]
+    /// Pick multiple folders
+    ///
+    /// Supported only on: macos
+    pub fn pick_files_or_folders(self) -> Option<Vec<PathBuf>> {
+        FileOrFolderPickerDialogImpl::pick_files_or_folders(self)
     }
 
     /// Opens save file dialog
@@ -183,7 +205,7 @@ impl AsyncFileDialog {
     }
 
     /// Set starting directory of the dialog. Supported platforms:
-    ///   * Linux ([GTK only](https://github.com/PolyMeilex/rfd/issues/42))
+    ///   * Linux
     ///   * Windows
     ///   * Mac
     pub fn set_directory<P: AsRef<Path>>(mut self, path: P) -> Self {
@@ -195,6 +217,7 @@ impl AsyncFileDialog {
     ///  * Windows
     ///  * Linux
     ///  * Mac
+    ///  * WASM32 (otherwise defaults to a random string with no extension)
     pub fn set_file_name(mut self, file_name: impl Into<String>) -> Self {
         self.file_dialog = self.file_dialog.set_file_name(file_name);
         self
@@ -215,19 +238,24 @@ impl AsyncFileDialog {
     ///  * Windows
     ///  * Mac
     ///  * Linux (XDG only)
-    pub fn set_parent<W: HasWindowHandle + HasDisplayHandle>(mut self, parent: &W) -> Self {
+    pub fn set_parent<W: HasWindowHandle + HasDisplayHandle + ?Sized>(
+        mut self,
+        parent: &W,
+    ) -> Self {
         self.file_dialog = self.file_dialog.set_parent(parent);
         self
     }
 
     /// Set can create directories in the dialog.
-    /// Suported in: `macos`.
+    /// Supported in: `macos`.
     pub fn set_can_create_directories(mut self, can: bool) -> Self {
         self.file_dialog = self.file_dialog.set_can_create_directories(can);
         self
     }
 }
 
+#[cfg(target_os = "macos")]
+use crate::backend::AsyncFileOrFolderPickerDialogImpl;
 use crate::backend::AsyncFilePickerDialogImpl;
 use crate::backend::AsyncFileSaveDialogImpl;
 #[cfg(not(target_arch = "wasm32"))]
@@ -260,6 +288,22 @@ impl AsyncFileDialog {
     /// Does not exist in `WASM32`
     pub fn pick_folders(self) -> impl Future<Output = Option<Vec<FileHandle>>> {
         AsyncFolderPickerDialogImpl::pick_folders_async(self.file_dialog)
+    }
+
+    #[cfg(target_os = "macos")]
+    /// Pick one file or folder
+    ///
+    /// Supported only on: macos
+    pub fn pick_file_or_folder(self) -> impl Future<Output = Option<FileHandle>> {
+        AsyncFileOrFolderPickerDialogImpl::pick_file_or_folder_async(self.file_dialog)
+    }
+
+    #[cfg(target_os = "macos")]
+    /// Pick multiple folders
+    ///
+    /// Supported only on: macos
+    pub fn pick_files_or_folders(self) -> impl Future<Output = Option<Vec<FileHandle>>> {
+        AsyncFileOrFolderPickerDialogImpl::pick_files_or_folders_async(self.file_dialog)
     }
 
     /// Opens save file dialog

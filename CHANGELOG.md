@@ -2,10 +2,26 @@
 
 ## Unreleased
 
+- `tokio` and `async-std` features removed
+
+## 0.16.0
+
 - Fix regressions on Wayland due to `ashpd` upgrade (#255).
 - The `pick_file()` method of file dialog targeted WASM now can return `None` correctly when cancelled (#258)
 - Update `windows-sys` to 0.60.
 - Make `ashpd` Wayland APIs optional. These are now gated behind the `wayland` feature, which is enabled by default.
+
+### Changed items in the public API
+```diff
+-pub fn AsyncFileDialog::set_parent<W: HasWindowHandle + HasDisplayHandle>(self, parent: &W) -> Self
++pub fn AsyncFileDialog::set_parent<W: HasWindowHandle + HasDisplayHandle + ?Sized>(self, parent: &W) -> Self
+-pub fn AsyncMessageDialog::set_parent<W: HasWindowHandle + HasDisplayHandle>(self, parent: &W) -> Self
++pub fn MessageDialog::set_parent<W: HasWindowHandle + HasDisplayHandle + ?Sized>(self, parent: &W) -> Self
+-pub fn FileDialog::set_parent<W: HasWindowHandle + HasDisplayHandle>(self, parent: &W) -> Self
++pub fn rfd::FileDialog::set_parent<W: HasWindowHandle + HasDisplayHandle + ?Sized>(self, parent: &W) -> Self
+-pub fn MessageDialog::set_parent<W: HasWindowHandle + HasDisplayHandle>(self, parent: &W) -> Self
++pub fn MessageDialog::set_parent<W: HasWindowHandle + HasDisplayHandle + ?Sized>(self, parent: &W) -> Self
+```
 
 ## 0.15.3
 
