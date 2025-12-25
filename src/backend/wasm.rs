@@ -210,11 +210,7 @@ impl<'a> WasmDialog<'a> {
                     let resolve_promise = Closure::wrap(Box::new(move || {
                         res.call1(&JsValue::undefined(), &JsValue::from(true)).unwrap();
                     }) as Box<dyn FnMut()>);
-
-                    let reject_promise = Closure::wrap(Box::new(move || {
-                        rej.call1(&JsValue::undefined(), &JsValue::from(true)).unwrap();
-                    }) as Box<dyn FnMut()>);
-
+                    
                     let reject_promise = Closure::wrap(Box::new(move || {
                         rej.call1(&JsValue::undefined(), &JsValue::from(true))
                             .unwrap();
