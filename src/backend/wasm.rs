@@ -207,14 +207,15 @@ impl<'a> WasmDialog<'a> {
                     let output = element.clone();
                     let file_name = name.clone();
 
-                    let resolve_promise = Closure::wrap(Box::new(move || {
-                        res.call1(&JsValue::undefined(), &JsValue::from(true)).unwrap();
-                    }) as Box<dyn FnMut()>);
-                    
-                    let reject_promise = Closure::wrap(Box::new(move || {
-                        rej.call1(&JsValue::undefined(), &JsValue::from(true))
-                            .unwrap();
-                    }) as Box<dyn FnMut()>);
+                    // create_callback helper function to wrap closures with JsValue::from(true) call
+                    let create_callback = |func: js_sys::Function| {
+                        Closure::wrap(Box::new(move || {
+                            func.call1(&JsValue::undefined(), &JsValue::from(true)).unwrap();
+                        }) as Box<dyn FnMut()>)
+                    };
+
+                    let resolve_promise = create_callback(res);
+                    let reject_promise = create_callback(rej);
 
                     // Resolve the promise once the user clicks the download link or the button.
                     output.set_onclick(Some(resolve_promise.as_ref().unchecked_ref()));
